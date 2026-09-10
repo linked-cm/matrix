@@ -1,0 +1,42 @@
+# Serve Matrix homeserver — Continuwuity (plan 002 M0, pinned v26.7.1+).
+# Chosen over Tuwunel/Synapse 2026-07-28: community fork, weekly cadence,
+# v26.7.1 fixed E2EE appservice masquerading + MSC4190 device creation (both
+# load-bearing for the Serve appservice). NO MSC3861/MAS — identity lands via
+# appservice login or [global.oauth.oidc] IdP linking (M1 decision).
+# Synapse+MAS remains the documented fallback (REFACTOR(matrix-homeserver)).
+
+[global]
+# IMMUTABLE after first start — changing it invalidates the database.
+server_name = "serve.create.now"
+address = ["0.0.0.0"]
+port = 8008
+database_path = "/var/lib/continuwuity"
+
+# Closed server: players are appservice-managed puppets; the only direct
+# registration is the one-time bootstrap admin, gated by a secret token
+# injected via CONTINUWUITY_REGISTRATION_TOKEN (never in this file).
+allow_registration = true
+allow_federation = false
+allow_encryption = true
+
+# NOTE (verified v26.7.1): on FIRST boot Continuwuity mints a one-time admin
+# registration token into its logs and the configured token is inert until
+# that first account exists — bootstrap.sh scrapes it. After the bootstrap
+# admin exists, the CONTINUWUITY_REGISTRATION_TOKEN gate applies.
+
+# ── media (plan 036 P4 hardening) ─────────────────────────────────────────
+# Server-side ceiling for uploads, aligned just above the CLIENT caps the
+# composer skills enforce (images re-encoded ≤10MB, files ≤25MB) so the
+# client cap is the one users ever see; 26MB leaves request overhead.
+max_request_size = 27262976
+# v26.7.1 has NO time-based media retention knob (verified against the config
+# reference 2026-07-29): growth is bounded by the caps above + monitored, the
+# volume rides the 15-min restic lane (infra/backup/), and a retention job
+# arrives when the homeserver grows one (or via admin media commands).
+# Our client still reads the legacy unauthenticated download endpoint
+# (<img src> can't carry auth headers) — flip this off with the
+# authenticated-media/encrypted-attachment work, not before.
+allow_legacy_media = true
+
+[global.well_known]
+client = "https://serve.create.now"
