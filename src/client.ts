@@ -315,6 +315,25 @@ export async function createMatrixMessaging(
         .redactEvent(threadId as any, eventId as any)
         .catch((cause: unknown) => console.warn('[matrix] delete failed:', cause));
     },
+    // Matrix-native abuse reporting reaches the homeserver operator. It does not replace
+    // a host's durable report/moderation queue; MessageClient can call both.
+    report: async (threadId: string, eventId: string, report: { reason: string; score?: number }) => {
+      await client.reportEvent(threadId, eventId, report.score ?? -100, report.reason);
+    },
+    // Matrix ignored-users is one-way and account-scoped. Keep the seam honest: this is
+    // exposed as ignoreAuthor, never as a bilateral product-level block.
+    ignoreAuthor: async (authorId: string) => {
+      const ignored = client.getIgnoredUsers?.() ?? [];
+      if (ignored.includes(authorId)) return;
+      await client.setIgnoredUsers([...ignored, authorId]);
+      reproject();
+    },
+    unignoreAuthor: async (authorId: string) => {
+      const ignored = client.getIgnoredUsers?.() ?? [];
+      if (!ignored.includes(authorId)) return;
+      await client.setIgnoredUsers(ignored.filter((id: string) => id !== authorId));
+      reproject();
+    },
     // ── live signals  — typing + read receipts, natively Matrix ──
     // The UI fires this on every keystroke; the pure throttle collapses that to at most
     // one `true` per TYPING_REFRESH_MS (refreshing the server's 6s notice) and only
@@ -362,5 +381,5 @@ export async function createMatrixMessaging(
       client.removeAllListeners();
       client.stopClient();
     },
-  };
+  } as Messaging & { stop(): void };
 }

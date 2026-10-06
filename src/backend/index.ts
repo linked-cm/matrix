@@ -20,3 +20,11 @@ export {
   type MatrixSessionResponse,
   type WebIdFromRequest,
 } from './routes.js';
+
+export {
+  createMatrixModerationHandler,
+  type MatrixModerationDecision,
+  type MatrixModerationHandler,
+  type MatrixModerationHandlerOptions,
+  type MatrixModerationRequest,
+} from './moderation.js';
