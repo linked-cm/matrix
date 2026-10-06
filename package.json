@@ -25,7 +25,11 @@
   ],
   "sideEffects": [
     "./src/package.ts",
-    "./src/index.ts"
+    "./src/index.ts",
+    "./src/shapes/index.ts",
+    "./src/shapes/*.ts",
+    "lib/esm/shapes/index.js",
+    "lib/esm/shapes/*.js"
   ],
   "publishConfig": {
     "access": "public"
@@ -81,13 +85,13 @@
     }
   },
   "dependencies": {
-    "@_linked/core": "2.14.4",
+    "@_linked/core": "^2.25.0",
     "@_linked/xsd": "^1.0.0",
     "@linked.cm/messaging": "file:../messaging"
   },
   "peerDependencies": {
     "matrix-js-sdk": ">=42.0.0",
-    "react": ">=18.2.0"
+    "react": "^18.2.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "matrix-js-sdk": {
@@ -98,11 +102,11 @@
     }
   },
   "devDependencies": {
-    "@_linked/cli": "1.11.1",
+    "@_linked/cli": "1.39.0",
     "@types/node": "^20.12.7",
-    "@types/react": "^18.3.24",
+    "@types/react": "^19.3.0",
     "matrix-js-sdk": "42.0.0",
-    "react": "^18.3.1",
+    "react": "^19.3.0",
     "typescript": "^5.9.2",
     "vitest": "^2.1.9",
     "@changesets/changelog-github": "^1.0.0",

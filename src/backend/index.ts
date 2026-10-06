@@ -7,3 +7,16 @@ export {
   type MatrixBridgeConfig,
   type MatrixIdentity,
 } from './identity.js';
+
+export {
+  createMatrixSessionHandler,
+  registerMatrixRoutes,
+  type DisplayNameFromRequest,
+  type EnsureMatrixSessionFn,
+  type MatrixRouteServer,
+  type MatrixSessionHandler,
+  type MatrixSessionHandlerOptions,
+  type MatrixSessionRequest,
+  type MatrixSessionResponse,
+  type WebIdFromRequest,
+} from './routes.js';

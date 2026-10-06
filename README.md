@@ -47,10 +47,13 @@ by coincidence.
 import { createMatrixMessaging, fetchMatrixSession } from '@linked.cm/matrix/client';
 
 const transport = await createMatrixMessaging(
-  await fetchMatrixSession(viewer.webId, viewer.name),
+  await fetchMatrixSession({ name: viewer.name }),
   chat,
 );
 ```
+
+`fetchMatrixSession` posts `{ name }` only, with `credentials: 'same-origin'`.
+It never sends a WebID. The session route decides who is signed in.
 
 `transport` satisfies `Messaging`, so it drops straight into `MessageClient`.
 It projects rooms into spaces and threads, supports reactions, replies, edits,
@@ -62,10 +65,13 @@ substituting demo data:
 
 ```tsx
 const { transport, state } = useMatrixTransport({
-  getViewer: () => session.get(),
+  getViewer: () => (session ? { webId: session.webId, name: session.name } : null),
   namespace: chat,
 });
 ```
+
+`getViewer()` may still return `{ webId, name }` so the hook knows whether
+someone is signed in and when that person changes. Only `name` is sent.
 
 ## Identity
 
@@ -85,8 +91,15 @@ backend holds the appservice `as_token` and registers-or-logs-in the caller's
 puppet. **The `as_token` never reaches a client** — callers receive only their
 own user-scoped access token.
 
+`ensureMatrixSession` is a **privileged server primitive**. It creates a
+homeserver login for whatever WebID it is given. Call it only with a WebID the
+host has authenticated, or a WebID the host is authorized to provision (for
+example the other party of a direct conversation the session user may open).
+Never pass a WebID taken from a request body. Do not log the access token it
+returns.
+
 ```ts
-// server-only
+// server-only — webId must already be authenticated or authorized
 import { ensureMatrixSession } from '@linked.cm/matrix/backend';
 
 const identity = await ensureMatrixSession(webId, {
@@ -95,6 +108,37 @@ const identity = await ensureMatrixSession(webId, {
   recordIdentity: (webId, mxid) => mirrorIntoGraph(webId, mxid),
 });
 ```
+
+## Wiring sessions safely
+
+The caller's own session goes through `createMatrixSessionHandler`.
+`resolveWebId` is required: it reads the host's verified server session. A
+request body that contains a `webId` key at all is `400`
+`webid-from-session-only` and does not mint. No session WebID is `401`
+`authentication-required`. Display name comes from `resolveDisplayName(req)`
+when that option is set, otherwise from a string body `name` (cosmetic only).
+
+```ts
+import { createMatrixSessionHandler } from '@linked.cm/matrix/backend';
+
+const matrixSession = createMatrixSessionHandler({
+  resolveWebId: (req) => readVerifiedWebId(req),
+  resolveDisplayName: (req) => readVerifiedName(req),
+  config: {
+    serverName: 'chat.example.org',
+    registrationPath: 'infra/matrix/appservice.yaml',
+    recordIdentity: (webId, mxid) => mirrorIntoGraph(webId, mxid),
+  },
+});
+
+// Framework-agnostic: Serve registers (req, res) handlers this way.
+registerRoute('post', '/api/matrix/session', matrixSession);
+```
+
+A host that already wraps the bridge (Serve's `ensureMatrixSession(webId, displayName)`)
+passes that wrapper as `ensureSession` instead of `config`. On an Express-style
+server, `registerMatrixRoutes(server, { resolveWebId, config, sessionPath })`
+mounts `POST /api/matrix/session` by default.
 
 ## Homeserver
 
@@ -120,5 +164,9 @@ Read the counts, then re-run without `--dry-run`. Every term is idempotent, and
 old triples are removed only after the new ones are written. Nothing runs this
 for you.
 
-The package targets `@_linked/core` 2.14.4 and owns the permanent identifier
+The package targets `@_linked/core` ^2.25.0 and owns the permanent identifier
 namespace `https://id.linked.cm/matrix/`.
+
+During development this package depends on `@linked.cm/messaging` as
+`file:../messaging`. Replace that with `^0.2.0` after messaging 0.2.0 is
+published; a `file:` dependency cannot be published.

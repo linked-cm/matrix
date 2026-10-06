@@ -5,8 +5,7 @@
 // then shapes), matching every other LINKED package.
 import './package.js';
 import './ontologies/matrix.js';
-import './shapes/MatrixIdentity.js';
-import './shapes/MatrixRoomBinding.js';
+import './shapes/index.js';
 
 export * from './package.js';
 export * as mx from './ontologies/matrix.js';

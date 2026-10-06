@@ -9,13 +9,11 @@ Extracted from `serve-earth/serve-community` (Serve's Matrix transport) on 2026-
 - `linkedPackage('@_linked/matrix', { baseUri: 'https://linked.cm/' })` in `src/package.ts` — it decides the package and component IRIs. The npm name is independent of it.
 - The identifier namespace `https://id.linked.cm/matrix/` and the MXID derivation in `src/mxid.ts`. Changing either re-keys every existing Matrix user and room binding.
 
-## Release blocker: session identity
+## Session identity
 
-`ensureMatrixSession(webId, …)` (`src/backend/identity.ts`) creates a homeserver login for whatever WebID it is given, and `fetchMatrixSession` (`src/client.ts`) sends `{ webId, name }` in the request body. A host that wires these together as-is lets any caller obtain any person's Matrix session. Before the first npm release:
+`ensureMatrixSession(webId, …)` (`src/backend/identity.ts`) is a privileged server primitive: it creates a homeserver login for the WebID it is given. Call it only with a WebID the host has authenticated, or one the host is authorized to provision (for example the other party of a DM the session user may open). Never pass a WebID from a request body.
 
-- Ship a `registerMatrixRoutes(server, { resolveWebId })` helper. `resolveWebId(req)` is supplied by the host and reads its **verified server session**. The route refuses a body `webId` and answers 401 with no session.
-- `fetchMatrixSession` stops sending `webId`.
-- Add a test that a spoofed body `webId` is rejected.
+The safe default for the caller's own session is `createMatrixSessionHandler({ resolveWebId })` (`src/backend/routes.ts`), also mounted by `registerMatrixRoutes`. `resolveWebId` reads the host's verified server session and is required at construction. The handler refuses a body `webId` (`400 webid-from-session-only`) and answers `401 authentication-required` when that resolver yields no WebID. `fetchMatrixSession({ name?, sessionRoute? })` posts `{ name }` only.
 
 See `serve-community` `docs/reports/2026-10-staging-signin-readiness.md` (rows A10/A14).
 
@@ -23,5 +21,5 @@ See `serve-community` `docs/reports/2026-10-staging-signin-readiness.md` (rows A
 
 - Server-only code lives under `src/backend/` and is exported only from `@linked.cm/matrix/backend`. Never import it from client code.
 - Host policy (age bands, safeguarding, room taxonomy) stays in the host; this package provides the bridge, the projection, and the client.
-- Depends on `@linked.cm/messaging`. During development it resolves as `file:../messaging`, so clone both repos side by side and run `npm run build` in `messaging` before typechecking here. Replace it with a published version range before releasing; a `file:` dependency cannot be published and fails CI, which is why this repo has no PR workflow yet.
+- Depends on `@linked.cm/messaging`. During development it resolves as `file:../messaging`, so clone both repos side by side and run `npm run build` in `messaging` before typechecking here. Replace it with `^0.2.0` after `@linked.cm/messaging` 0.2.0 is published; a `file:` dependency cannot be published and fails CI, which is why this repo has no PR workflow yet.
 - Releases go through changesets (`npx changeset`). Add `.github/workflows/publish.yml` (copied from `linked-cm/calendar`) only when a release is intended: with no pending changesets, that workflow publishes the current version as soon as it lands on `main`.

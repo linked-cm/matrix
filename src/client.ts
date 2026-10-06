@@ -35,20 +35,33 @@ export interface MatrixSessionInfo {
 }
 
 /**
- * Host session → Matrix session, via the host's bridge route (the backend half of
- * this package answers it). The route path is a host choice; it defaults to the
- * one `registerMatrixRoutes` mounts.
+ * Ask the host's session route for this browser's Matrix session.
+ *
+ * The body is `{ name }` only — a cosmetic display name — and the cookie
+ * session travels with `credentials: 'same-origin'`. This function never
+ * sends a WebID. Who is signed in is the server's decision
+ * (`createMatrixSessionHandler` + the host's `resolveWebId`).
+ *
+ * The route path is a host choice; it defaults to the one
+ * `registerMatrixRoutes` mounts.
  */
 export async function fetchMatrixSession(
-  webId: string,
-  name?: string,
-  sessionRoute = '/api/matrix/session',
+  options?: { name?: string; sessionRoute?: string },
 ): Promise<MatrixSessionInfo> {
+  const opts = options && typeof options === 'object' ? options : {};
+  const sessionRoute =
+    typeof opts.sessionRoute === 'string' && opts.sessionRoute.length > 0
+      ? opts.sessionRoute
+      : '/api/matrix/session';
+  // Build the body field-by-field. Never copy `options` through: a smuggled
+  // `webId` must not leave the browser.
+  const payload: { name?: string } = {};
+  if (typeof opts.name === 'string') payload.name = opts.name;
   const res = await fetch(sessionRoute, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'same-origin',
-    body: JSON.stringify({ webId, name }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

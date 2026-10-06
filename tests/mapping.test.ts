@@ -80,6 +80,28 @@ describe('matrix → messaging projection', () => {
     expect(toThreads([channel({ myLevel: 50 })])[0].readOnly).toBe(false);
   });
 
+  it('threads carry a host audience key verbatim and do not special-case it', () => {
+    const staff = channel({
+      roomId: '!staff',
+      name: 'Staff',
+      marker: { entityIri: `${TEAM}/channel/staff`, tier: 'team', audience: 'staff' },
+    });
+    const everyone = channel({
+      roomId: '!all',
+      name: 'Everyone',
+      marker: { entityIri: `${TEAM}/channel/all`, tier: 'team', audience: 'all' },
+    });
+    const blank = channel({
+      roomId: '!blank',
+      name: 'Blank',
+      marker: { entityIri: `${TEAM}/channel/blank`, tier: 'team', audience: '' },
+    });
+    const threads = toThreads([space, staff, everyone, blank]);
+    expect(threads.find((t) => t.id === '!staff')?.audience).toBe('staff');
+    expect(threads.find((t) => t.id === '!all')?.audience).toBe('all');
+    expect(threads.find((t) => t.id === '!blank')?.audience).toBeUndefined();
+  });
+
   it('messages: text, mine-flag, bot flag, and m.serve.* card extraction', () => {
     const room = channel({
       events: [

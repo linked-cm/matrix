@@ -92,11 +92,20 @@ async function hs(path: string, body: unknown, token: string, query = '') {
 }
 
 /**
- * Ensure the player's puppet exists and return a fresh device session.
+ * Privileged server primitive. Register-or-login the puppet for `webId` and
+ * return that account's user-scoped access token.
+ *
+ * Call this only with a WebID the host has authenticated, or a WebID the host
+ * is authorized to provision (for example the other party of a direct
+ * conversation the session user is allowed to open). Never pass a WebID taken
+ * from a request body. The safe default for the caller's own session is
+ * `createMatrixSessionHandler`, which reads the host's verified session and
+ * refuses a body `webId`.
+ *
  * Register wins the common first-contact case; M_USER_IN_USE falls through
  * to appservice login. Both paths are idempotent per call — each issues a
  * new device, which the client persists (device reuse is the client's job,
- * matrix-js-sdk crypto store; M3).
+ * matrix-js-sdk crypto store).
  */
 export async function ensureMatrixSession(
   webId: string,

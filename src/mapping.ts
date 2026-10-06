@@ -126,6 +126,15 @@ export function toSpaces(rooms: RoomSnapshot[]): MsgSpace[] {
   return spaces;
 }
 
+/**
+ * Host audience key, carried verbatim. An empty string is treated as absent.
+ * The projection does not interpret the value — age bands and who may read
+ * the thread belong to the host.
+ */
+function hostAudience(audience: string | undefined): string | undefined {
+  return typeof audience === 'string' && audience.length > 0 ? audience : undefined;
+}
+
 /** Threads = channel rooms under their parent Space; a DM is its own thread. */
 export function toThreads(rooms: RoomSnapshot[]): MsgThread[] {
   const threads: MsgThread[] = [];
@@ -146,7 +155,7 @@ export function toThreads(rooms: RoomSnapshot[]): MsgThread[] {
       family: isDm ? undefined : 'team',
       unread: room.unread || undefined,
       readOnly: postFloor > (room.myLevel ?? 0),
-      audience: room.marker?.audience === '18+' ? '18+' : undefined,
+      audience: hostAudience(room.marker?.audience),
       encrypted: room.encrypted || undefined,
       typing: room.typingNames?.length ? room.typingNames : undefined,
     });
