@@ -11,7 +11,7 @@
  */
 import React from 'react';
 import type { Messaging } from '@linked.cm/messaging';
-import { createMatrixMessaging, fetchMatrixSession } from './client.js';
+import { createMatrixMessaging, fetchMatrixSession, type MatrixSessionHeaders } from './client.js';
 import type { MatrixNamespaceConfig } from './config.js';
 
 type LiveTransport = Messaging & { stop(): void };
@@ -31,6 +31,10 @@ export interface MatrixTransportOptions {
   namespace: Partial<MatrixNamespaceConfig> & Pick<MatrixNamespaceConfig, 'serverName'>;
   /** Route the host mounted for the session bridge. */
   sessionRoute?: string;
+  /** Headers (or a function returning them) that carry the host session to its route, e.g. a bearer token. */
+  sessionHeaders?: MatrixSessionHeaders;
+  /** Credentials mode for the session request. Defaults to `'same-origin'`. */
+  sessionCredentials?: RequestCredentials;
   /** Expose the seam (never credentials) on `window[debugHandle]` for devtools. */
   debugHandle?: string;
 }
@@ -72,6 +76,8 @@ async function connect(): Promise<void> {
   const webId = viewer.webId;
   const name = viewer.name;
   const sessionRoute = options.sessionRoute;
+  const headers = options.sessionHeaders;
+  const credentials = options.sessionCredentials;
   const namespace = options.namespace;
   const debugHandle = options.debugHandle;
   const generation = ++connectGeneration;
@@ -79,7 +85,7 @@ async function connect(): Promise<void> {
   state = 'connecting';
   notify();
   try {
-    const session = await fetchMatrixSession({ name, sessionRoute });
+    const session = await fetchMatrixSession({ name, sessionRoute, headers, credentials });
     if (generation !== connectGeneration) return;
     const transport = await createMatrixMessaging(session, namespace);
     if (generation !== connectGeneration) {

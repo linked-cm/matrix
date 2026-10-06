@@ -71,4 +71,28 @@ describe('fetchMatrixSession', () => {
     expect(body).toEqual({});
     expect('webId' in body).toBe(false);
   });
+
+  it('attaches host headers so a bearer-token session reaches the route, keeping the JSON content type', async () => {
+    const fetchMock = stubFetch();
+    await fetchMatrixSession({
+      name: 'Ada',
+      headers: { Authorization: 'Bearer host-session', 'Content-Type': 'text/plain' },
+    });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(init.headers).toEqual({ Authorization: 'Bearer host-session', 'Content-Type': 'application/json' });
+    expect(init.credentials).toBe('same-origin');
+    expect(Object.keys(bodyOf(fetchMock))).toEqual(['name']);
+  });
+
+  it('awaits a headers function and honours a credentials override', async () => {
+    const fetchMock = stubFetch();
+    await fetchMatrixSession({
+      headers: async () => ({ Authorization: 'Bearer fresh' }),
+      credentials: 'include',
+    });
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer fresh');
+    expect(init.credentials).toBe('include');
+    expect(bodyOf(fetchMock)).not.toHaveProperty('webId');
+  });
 });

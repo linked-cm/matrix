@@ -45,8 +45,22 @@ export interface MatrixSessionInfo {
  * The route path is a host choice; it defaults to the one
  * `registerMatrixRoutes` mounts.
  */
+/** Host credentials for the session request (e.g. a bearer token on mobile). Never identity in the body. */
+export type MatrixSessionHeaders =
+  | Record<string, string>
+  | (() => Record<string, string> | Promise<Record<string, string>>);
+
+export interface FetchMatrixSessionOptions {
+  name?: string;
+  sessionRoute?: string;
+  /** Extra request headers, or a function returning them, so the host's session reaches its route. */
+  headers?: MatrixSessionHeaders;
+  /** Defaults to `'same-origin'`; a native shell calling another origin may need `'include'`. */
+  credentials?: RequestCredentials;
+}
+
 export async function fetchMatrixSession(
-  options?: { name?: string; sessionRoute?: string },
+  options?: FetchMatrixSessionOptions,
 ): Promise<MatrixSessionInfo> {
   const opts = options && typeof options === 'object' ? options : {};
   const sessionRoute =
@@ -57,10 +71,11 @@ export async function fetchMatrixSession(
   // `webId` must not leave the browser.
   const payload: { name?: string } = {};
   if (typeof opts.name === 'string') payload.name = opts.name;
+  const extra = typeof opts.headers === 'function' ? await opts.headers() : (opts.headers ?? {});
   const res = await fetch(sessionRoute, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    headers: { ...extra, 'Content-Type': 'application/json' },
+    credentials: opts.credentials ?? 'same-origin',
     body: JSON.stringify(payload),
   });
   if (!res.ok) {

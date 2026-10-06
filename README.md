@@ -140,6 +140,22 @@ passes that wrapper as `ensureSession` instead of `config`. On an Express-style
 server, `registerMatrixRoutes(server, { resolveWebId, config, sessionPath })`
 mounts `POST /api/matrix/session` by default.
 
+On the client, the session cookie travels with `credentials: 'same-origin'` by
+default. A host whose session is a bearer token (a native or Capacitor shell, or
+a different API origin) passes it as headers; the body still carries only `name`:
+
+```ts
+useMatrixTransport({
+  getViewer,
+  namespace,
+  sessionHeaders: async () => ({ Authorization: `Bearer ${await getSessionToken()}` }),
+  sessionCredentials: 'include', // only when the route is on another origin
+});
+```
+
+`fetchMatrixSession({ name, sessionRoute, headers, credentials })` takes the same
+options directly.
+
 ## Homeserver
 
 `infra/` carries a Continuwuity configuration, an appservice registration
