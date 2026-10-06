@@ -24,7 +24,7 @@ export class MatrixIdentityShape extends Shape {
     name: 'Subject',
     description: 'The subject this Matrix identity belongs to.',
   })
-  get subject(): string {
+  get forSubject(): string {
     return '';
   }
 
