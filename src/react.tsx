@@ -8,7 +8,7 @@
  * owns only the connect/retry lifecycle.
  */
 import React from 'react';
-import type { Messaging } from '@_linked/messaging';
+import type { Messaging } from '@linked.cm/messaging';
 import { createMatrixMessaging, fetchMatrixSession } from './client.js';
 import type { MatrixNamespaceConfig } from './config.js';
 

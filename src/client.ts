@@ -8,7 +8,7 @@
  * E2EE: rust-crypto is initialized when available so encrypted rooms decrypt.
  * Failures degrade to unencrypted rooms only — never a hard crash.
  */
-import type { Messaging, MsgMessage, MsgSpace, MsgThread } from '@_linked/messaging';
+import type { Messaging, MsgMessage, MsgSpace, MsgThread } from '@linked.cm/messaging';
 import {
   findMyReactionEventId,
   replyFallbackBody,

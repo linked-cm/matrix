@@ -14,7 +14,7 @@ import type {
   MsgSpace,
   MsgThread,
   PrivacyTier,
-} from '@_linked/messaging';
+} from '@linked.cm/messaging';
 import { type MatrixNamespaceConfig, pollTypesFor } from './config.js';
 
 /** Transport-extracted view of one room — plain data, no sdk objects. */

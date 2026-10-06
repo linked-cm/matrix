@@ -1,8 +1,8 @@
-# `@_linked/matrix`
+# `@linked.cm/matrix`
 
-A Matrix transport for [`@_linked/messaging`](https://github.com/linked-cm/messaging).
+A Matrix transport for [`@linked.cm/messaging`](https://github.com/linked-cm/messaging).
 
-`@_linked/messaging` defines the seam and the UI. This package implements the
+`@linked.cm/messaging` defines the seam and the UI. This package implements the
 seam against a Matrix homeserver — identity, sessions, projection, and the graph
 mirror — so an app gets federated, end-to-end-encrypted chat without any
 component knowing Matrix exists.
@@ -10,15 +10,15 @@ component knowing Matrix exists.
 ## Install
 
 ```sh
-npm install @_linked/matrix matrix-js-sdk
+npm install @linked.cm/matrix matrix-js-sdk
 ```
 
 ## Entry points
 
-- `@_linked/matrix` — shapes, ontology, namespace config, MXID derivation, and the pure projection
-- `@_linked/matrix/client` — the `matrix-js-sdk` transport implementing `Messaging`
-- `@_linked/matrix/react` — the connect/retry lifecycle hook
-- `@_linked/matrix/backend` — **server-only**: the appservice-mediated identity bridge
+- `@linked.cm/matrix` — shapes, ontology, namespace config, MXID derivation, and the pure projection
+- `@linked.cm/matrix/client` — the `matrix-js-sdk` transport implementing `Messaging`
+- `@linked.cm/matrix/react` — the connect/retry lifecycle hook
+- `@linked.cm/matrix/backend` — **server-only**: the appservice-mediated identity bridge
 
 ## Nothing here is branded
 
@@ -26,7 +26,7 @@ Every name a host stamps into Matrix is a host choice, so it is configuration
 rather than a constant:
 
 ```ts
-import { resolveMatrixNamespace } from '@_linked/matrix';
+import { resolveMatrixNamespace } from '@linked.cm/matrix';
 
 export const chat = resolveMatrixNamespace({
   serverName: 'chat.example.org',      // the only required field
@@ -44,7 +44,7 @@ by coincidence.
 ## Client
 
 ```ts
-import { createMatrixMessaging, fetchMatrixSession } from '@_linked/matrix/client';
+import { createMatrixMessaging, fetchMatrixSession } from '@linked.cm/matrix/client';
 
 const transport = await createMatrixMessaging(
   await fetchMatrixSession(viewer.webId, viewer.name),
@@ -87,7 +87,7 @@ own user-scoped access token.
 
 ```ts
 // server-only
-import { ensureMatrixSession } from '@_linked/matrix/backend';
+import { ensureMatrixSession } from '@linked.cm/matrix/backend';
 
 const identity = await ensureMatrixSession(webId, {
   serverName: 'chat.example.org',
