@@ -43,37 +43,30 @@
   "exports": {
     ".": {
       "types": "./lib/esm/index.d.ts",
-      "development": "./src/index.ts",
       "import": "./lib/esm/index.js"
     },
     "./package": {
       "types": "./lib/esm/package.d.ts",
-      "development": "./src/package.ts",
       "import": "./lib/esm/package.js"
     },
     "./client": {
       "types": "./lib/esm/client.d.ts",
-      "development": "./src/client.ts",
       "import": "./lib/esm/client.js"
     },
     "./react": {
       "types": "./lib/esm/react.d.ts",
-      "development": "./src/react.tsx",
       "import": "./lib/esm/react.js"
     },
     "./backend": {
       "types": "./lib/esm/backend/index.d.ts",
-      "development": "./src/backend/index.ts",
       "import": "./lib/esm/backend/index.js"
     },
     "./*.js": {
       "types": "./lib/esm/*.d.ts",
-      "development": "./src/*.ts",
       "import": "./lib/esm/*.js"
     },
     "./*": {
       "types": "./lib/esm/*.d.ts",
-      "development": "./src/*.ts",
       "import": "./lib/esm/*.js"
     }
   },
