@@ -6,7 +6,7 @@ Extracted from `serve-earth/serve-community` (Serve's Matrix transport) on 2026-
 
 ## Do not change without a migration
 
-- `linkedPackage('@_linked/matrix', { baseUri: 'https://linked.cm/' })` in `src/package.ts` — it decides the package and component IRIs. The npm name is independent of it.
+- `linkedPackage('@linked.cm/matrix', { baseUri: 'https://linked.cm/' })` in `src/package.ts` decides the package and shape IRIs (`https://linked.cm/pkg/matrix`, `https://linked.cm/shape/matrix/…`). Core derives them from the last name segment, so the rename from `@_linked/matrix` kept every IRI; any change that alters that segment or the base URI needs a migration.
 - The identifier namespace `https://id.linked.cm/matrix/` and the MXID derivation in `src/mxid.ts`. Changing either re-keys every existing Matrix user and room binding.
 
 ## Session identity

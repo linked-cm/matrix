@@ -20,3 +20,24 @@ export {
   type MatrixSessionResponse,
   type WebIdFromRequest,
 } from './routes.js';
+
+export {
+  createMatrixModerationHandler,
+  type MatrixModerationDecision,
+  type MatrixModerationHandler,
+  type MatrixModerationHandlerOptions,
+  type MatrixModerationRequest,
+} from './moderation.js';
+
+export {
+  DEFAULT_MATRIX_ACTOR_FIELD,
+  createMatrixEnforcedSendHandler,
+  createModeratedRoomPowerLevels,
+  type MatrixEnforcedSendHandler,
+  type MatrixEnforcedSendOptions,
+  type MatrixEnforcementControl,
+  type MatrixEnforcementDecision,
+  type MatrixLogicalActor,
+  type MatrixModeratedRoomPowerLevelOptions,
+  type MatrixOutboundEvent,
+} from './enforcement.js';
