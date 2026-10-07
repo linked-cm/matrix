@@ -1,6 +1,6 @@
 {
   "name": "@linked.cm/matrix",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Matrix transport for @linked.cm/messaging — WebID↔MXID identity bridge, appservice-mediated sessions, graph-mirrored room bindings, and a matrix-js-sdk client behind the portable Messaging seam.",
   "linkedPackage": true,
   "type": "module",
