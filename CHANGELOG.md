@@ -1,5 +1,19 @@
 # @linked.cm/matrix
 
+## 0.3.0
+
+### Minor Changes
+
+- [#1](https://github.com/linked-cm/matrix/pull/1) [`1a4ac2c`](https://github.com/linked-cm/matrix/commit/1a4ac2c9193500fba0273caa61a5ecab79ddabfa) Thanks [@carlenmy](https://github.com/carlenmy)! - Add a fail-closed relay enforcement seam for hosts with mandatory safety or
+  policy controls. Server-issued sessions can attest an active policy, clients can
+  require it, moderated room power levels prevent direct member events, and a
+  framework-neutral controlled-send handler derives identity from the verified
+  session before authorization, control evaluation, logical-author stamping, and
+  relay dispatch.
+
+- [#1](https://github.com/linked-cm/matrix/pull/1) [`f5a52c2`](https://github.com/linked-cm/matrix/commit/f5a52c2cc44fc8ea8ad238ce55ee2ef6e0ecb167) Thanks [@carlenmy](https://github.com/carlenmy)! - Add Matrix-native event reporting and one-way ignore actions plus a verified-session,
+  host-authorized appservice moderation handler.
+
 ## 0.2.0
 
 ### Minor Changes
