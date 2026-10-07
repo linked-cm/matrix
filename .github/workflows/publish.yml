@@ -1,0 +1,30 @@
+# Calls the shared workflow in linked-cm/.github.
+#
+# This FILENAME is what npm's trusted-publisher check validates — not the shared workflow's.
+# Renaming this file invalidates this package's trusted publisher, and the only symptom is
+# that releases quietly start needing manual approval again.
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    uses: linked-cm/.github/.github/workflows/publish.yml@v1
+    permissions:
+      contents: write
+      pull-requests: write
+      # Needed HERE as well as in the shared workflow: a reusable workflow cannot widen the
+      # permissions its caller was granted, and without this npm never gets an id-token and
+      # every release silently falls back to the approval queue.
+      id-token: write
+    # Named rather than `inherit`: `inherit` forwards everything this repo can see, which is
+    # how a community repo would end up forwarding a first-party token.
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
