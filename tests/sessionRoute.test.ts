@@ -21,7 +21,10 @@ const identity = {
   homeserverUrl: 'https://chat.example.org',
 };
 
-function mockRes(): MatrixSessionResponse & { statusCode: number; body: unknown } {
+function mockRes(): MatrixSessionResponse & {
+  statusCode: number;
+  body: unknown;
+} {
   const res = {
     statusCode: 200,
     body: undefined as unknown,
@@ -44,13 +47,19 @@ describe('createMatrixSessionHandler', () => {
 
   it('throws at construction when resolveWebId is missing', () => {
     expect(() =>
-      createMatrixSessionHandler({ ensureSession: async () => identity } as never),
+      createMatrixSessionHandler({
+        ensureSession: async () => identity,
+      } as never)
     ).toThrow(/resolveWebId/);
-    expect(() => createMatrixSessionHandler(undefined as never)).toThrow(/resolveWebId/);
+    expect(() => createMatrixSessionHandler(undefined as never)).toThrow(
+      /resolveWebId/
+    );
   });
 
   it('throws at construction when neither ensureSession nor a bridge config is given', () => {
-    expect(() => createMatrixSessionHandler({ resolveWebId: () => SESSION })).toThrow(/ensureSession|serverName/);
+    expect(() =>
+      createMatrixSessionHandler({ resolveWebId: () => SESSION })
+    ).toThrow(/ensureSession|serverName/);
   });
 
   it('rejects a body webId even with a valid session, and does not mint', async () => {
@@ -76,7 +85,15 @@ describe('createMatrixSessionHandler', () => {
       ensureSession: ensure,
     });
     const res = mockRes();
-    await handler({ body: JSON.stringify({ webId: 'https://id.example/other', name: 'Gloria' }) }, res);
+    await handler(
+      {
+        body: JSON.stringify({
+          webId: 'https://id.example/other',
+          name: 'Gloria',
+        }),
+      },
+      res
+    );
     expect(res.statusCode).toBe(400);
     expect(res.body).toEqual({ error: 'webid-from-session-only' });
     expect(ensure).not.toHaveBeenCalled();
@@ -105,11 +122,64 @@ describe('createMatrixSessionHandler', () => {
       ensureSession: ensure,
     });
     const res = mockRes();
-    await handler({ body: { name: 'Ada', otherId: 'https://id.example/other' } }, res);
+    await handler(
+      { body: { name: 'Ada', otherId: 'https://id.example/other' } },
+      res
+    );
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual(identity);
     expect(ensure).toHaveBeenCalledTimes(1);
     expect(ensure).toHaveBeenCalledWith(SESSION, 'Ada');
+  });
+
+  it('refuses an enforced session unless the relay policy is active', async () => {
+    const ensure = vi.fn(async () => identity);
+    const assertActive = vi.fn(async () => false);
+    const handler = createMatrixSessionHandler({
+      resolveWebId: () => SESSION,
+      ensureSession: ensure,
+      enforcement: {
+        mode: 'relay',
+        policyId: 'peace-safety-v1',
+        sendRoute: '/api/matrix/send',
+        assertActive,
+      },
+    });
+    const res = mockRes();
+    await handler({ body: {} }, res);
+    expect(res.statusCode).toBe(503);
+    expect(res.body).toEqual({ error: 'matrix-enforcement-unavailable' });
+    expect(assertActive).toHaveBeenCalledWith({
+      webId: SESSION,
+      req: { body: {} },
+    });
+    expect(ensure).not.toHaveBeenCalled();
+  });
+
+  it('attests active relay enforcement in the server-issued session', async () => {
+    const handler = createMatrixSessionHandler({
+      resolveWebId: () => SESSION,
+      ensureSession: async () => identity,
+      enforcement: {
+        mode: 'relay',
+        policyId: 'peace-safety-v1',
+        sendRoute: '/api/matrix/send',
+        actorContentField: 'org.example.actor',
+        assertActive: () => true,
+      },
+    });
+    const res = mockRes();
+    await handler({ body: {} }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      ...identity,
+      enforcement: {
+        mode: 'relay',
+        policyId: 'peace-safety-v1',
+        sendRoute: '/api/matrix/send',
+        actorContentField: 'org.example.actor',
+      },
+    });
   });
 
   it('prefers resolveDisplayName over a cosmetic body name', async () => {
@@ -187,7 +257,10 @@ describe('createMatrixSessionHandler', () => {
 
   it('calls ensureMatrixSession with the session WebID when given a bridge config', async () => {
     ensureMatrixSession.mockResolvedValue(identity);
-    const config = { serverName: 'chat.example.org', registrationPath: 'infra/matrix/appservice.yaml' };
+    const config = {
+      serverName: 'chat.example.org',
+      registrationPath: 'infra/matrix/appservice.yaml',
+    };
     const handler = createMatrixSessionHandler({
       resolveWebId: () => SESSION,
       config,
@@ -206,7 +279,11 @@ describe('createMatrixSessionHandler', () => {
       serverName: 'chat.example.org',
     });
     await flat({ body: {} }, mockRes());
-    expect(ensureMatrixSession).toHaveBeenCalledWith(SESSION, { serverName: 'chat.example.org' }, undefined);
+    expect(ensureMatrixSession).toHaveBeenCalledWith(
+      SESSION,
+      { serverName: 'chat.example.org' },
+      undefined
+    );
 
     ensureMatrixSession.mockClear();
     const ensure = vi.fn(async () => identity);
@@ -221,7 +298,13 @@ describe('createMatrixSessionHandler', () => {
   });
 
   it('registerMatrixRoutes mounts the handler on the given path, or the default', async () => {
-    const custom: { path?: string; handler?: (req: { body?: unknown }, res: MatrixSessionResponse) => Promise<unknown> } = {};
+    const custom: {
+      path?: string;
+      handler?: (
+        req: { body?: unknown },
+        res: MatrixSessionResponse
+      ) => Promise<unknown>;
+    } = {};
     registerMatrixRoutes(
       {
         post(path, handler) {
@@ -233,7 +316,7 @@ describe('createMatrixSessionHandler', () => {
         sessionPath: '/api/custom/session',
         resolveWebId: () => SESSION,
         ensureSession: async () => identity,
-      },
+      }
     );
     expect(custom.path).toBe('/api/custom/session');
     const res = mockRes();
@@ -248,7 +331,7 @@ describe('createMatrixSessionHandler', () => {
           fallback.path = path;
         },
       },
-      { resolveWebId: () => SESSION, ensureSession: async () => identity },
+      { resolveWebId: () => SESSION, ensureSession: async () => identity }
     );
     expect(fallback.path).toBe('/api/matrix/session');
   });

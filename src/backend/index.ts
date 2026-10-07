@@ -28,3 +28,16 @@ export {
   type MatrixModerationHandlerOptions,
   type MatrixModerationRequest,
 } from './moderation.js';
+
+export {
+  DEFAULT_MATRIX_ACTOR_FIELD,
+  createMatrixEnforcedSendHandler,
+  createModeratedRoomPowerLevels,
+  type MatrixEnforcedSendHandler,
+  type MatrixEnforcedSendOptions,
+  type MatrixEnforcementControl,
+  type MatrixEnforcementDecision,
+  type MatrixLogicalActor,
+  type MatrixModeratedRoomPowerLevelOptions,
+  type MatrixOutboundEvent,
+} from './enforcement.js';

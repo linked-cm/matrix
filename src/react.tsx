@@ -11,7 +11,12 @@
  */
 import React from 'react';
 import type { Messaging } from '@linked.cm/messaging';
-import { createMatrixMessaging, fetchMatrixSession, type MatrixSessionHeaders } from './client.js';
+import {
+  createMatrixMessaging,
+  fetchMatrixSession,
+  type MatrixSessionHeaders,
+} from './client.js';
+import type { MatrixEnforcementRequirement } from './enforcement.js';
 import type { MatrixNamespaceConfig } from './config.js';
 
 type LiveTransport = Messaging & { stop(): void };
@@ -28,13 +33,16 @@ export interface MatrixViewer {
 
 export interface MatrixTransportOptions {
   getViewer: () => MatrixViewer | null;
-  namespace: Partial<MatrixNamespaceConfig> & Pick<MatrixNamespaceConfig, 'serverName'>;
+  namespace: Partial<MatrixNamespaceConfig> &
+    Pick<MatrixNamespaceConfig, 'serverName'>;
   /** Route the host mounted for the session bridge. */
   sessionRoute?: string;
   /** Headers (or a function returning them) that carry the host session to its route, e.g. a bearer token. */
   sessionHeaders?: MatrixSessionHeaders;
   /** Credentials mode for the session request. Defaults to `'same-origin'`. */
   sessionCredentials?: RequestCredentials;
+  /** Refuse to connect unless the server attests mandatory relay enforcement. */
+  requireEnforcement?: boolean | MatrixEnforcementRequirement;
   /** Expose the seam (never credentials) on `window[debugHandle]` for devtools. */
   debugHandle?: string;
 }
@@ -80,14 +88,24 @@ async function connect(): Promise<void> {
   const credentials = options.sessionCredentials;
   const namespace = options.namespace;
   const debugHandle = options.debugHandle;
+  const requireEnforcement = options.requireEnforcement;
   const generation = ++connectGeneration;
   openedFor = webId;
   state = 'connecting';
   notify();
   try {
-    const session = await fetchMatrixSession({ name, sessionRoute, headers, credentials });
+    const session = await fetchMatrixSession({
+      name,
+      sessionRoute,
+      headers,
+      credentials,
+    });
     if (generation !== connectGeneration) return;
-    const transport = await createMatrixMessaging(session, namespace);
+    const transport = await createMatrixMessaging(session, namespace, {
+      requireEnforcement,
+      enforcementHeaders: headers,
+      enforcementCredentials: credentials,
+    });
     if (generation !== connectGeneration) {
       transport.stop();
       return;
@@ -95,7 +113,8 @@ async function connect(): Promise<void> {
     live = transport;
     // debug handle: the SEAM only (no credentials live on it) — lets a devtools
     // session inspect the projected spaces/threads/messages.
-    if (debugHandle && typeof window !== 'undefined') (window as any)[debugHandle] = live;
+    if (debugHandle && typeof window !== 'undefined')
+      (window as any)[debugHandle] = live;
     state = 'on';
   } catch (cause) {
     if (generation !== connectGeneration) return;

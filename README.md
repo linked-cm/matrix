@@ -7,6 +7,10 @@ seam against a Matrix homeserver — identity, sessions, projection, and the gra
 mirror — so an app gets federated, end-to-end-encrypted chat without any
 component knowing Matrix exists.
 
+Encryption is a room policy, not an unconditional package promise. A host that
+requires non-bypassable plaintext controls must either use server-readable
+moderated rooms or make its trusted relay a cryptographic endpoint.
+
 ## Install
 
 ```sh
@@ -29,10 +33,11 @@ rather than a constant:
 import { resolveMatrixNamespace } from '@linked.cm/matrix';
 
 export const chat = resolveMatrixNamespace({
-  serverName: 'chat.example.org',      // the only required field
-  roomMarkerType: 'org.example.room',  // state event carrying entity/tier/audience
-  cardEventPrefix: 'org.example.',     // custom timeline events that render as cards
+  serverName: 'chat.example.org', // the only required field
+  roomMarkerType: 'org.example.room', // state event carrying entity/tier/audience
+  cardEventPrefix: 'org.example.', // custom timeline events that render as cards
   cardContentField: 'org.example.card',
+  actorContentField: 'org.example.actor',
   botUserIds: ['@bot:chat.example.org'],
 });
 ```
@@ -44,11 +49,14 @@ by coincidence.
 ## Client
 
 ```ts
-import { createMatrixMessaging, fetchMatrixSession } from '@linked.cm/matrix/client';
+import {
+  createMatrixMessaging,
+  fetchMatrixSession,
+} from '@linked.cm/matrix/client';
 
 const transport = await createMatrixMessaging(
   await fetchMatrixSession({ name: viewer.name }),
-  chat,
+  chat
 );
 ```
 
@@ -65,7 +73,8 @@ substituting demo data:
 
 ```tsx
 const { transport, state } = useMatrixTransport({
-  getViewer: () => (session ? { webId: session.webId, name: session.name } : null),
+  getViewer: () =>
+    session ? { webId: session.webId, name: session.name } : null,
   namespace: chat,
 });
 ```
@@ -148,13 +157,104 @@ a different API origin) passes it as headers; the body still carries only `name`
 useMatrixTransport({
   getViewer,
   namespace,
-  sessionHeaders: async () => ({ Authorization: `Bearer ${await getSessionToken()}` }),
+  sessionHeaders: async () => ({
+    Authorization: `Bearer ${await getSessionToken()}`,
+  }),
   sessionCredentials: 'include', // only when the route is on another origin
 });
 ```
 
 `fetchMatrixSession({ name, sessionRoute, headers, credentials })` takes the same
 options directly.
+
+## Non-bypassable controls
+
+A client-side `beforeSend` callback is useful UX, but it is not enforcement: a
+modified client can call the homeserver directly. When safety, account
+restrictions, or other mandatory controls are active, use the relay enforcement
+seam. It has three required layers:
+
+1. Ordinary members have a power level below `events_default`; only the trusted
+   relay may create visible timeline events.
+2. Every visible event goes through `createMatrixEnforcedSendHandler`, which
+   derives identity from the verified host session, runs every control, and
+   fails closed before relay dispatch.
+3. The session handler attests the active policy. Clients set
+   `requireEnforcement`; they refuse to connect if the server cannot prove that
+   the relay and room-locking infrastructure are healthy.
+
+```ts
+import {
+  createMatrixEnforcedSendHandler,
+  createMatrixSessionHandler,
+  createModeratedRoomPowerLevels,
+} from '@linked.cm/matrix/backend';
+
+const policyId = 'community-safety-v1';
+const sendRoute = '/api/matrix/send';
+
+registerRoute(
+  'post',
+  '/api/matrix/session',
+  createMatrixSessionHandler({
+    resolveWebId: readVerifiedWebId,
+    ensureSession,
+    enforcement: {
+      mode: 'relay',
+      policyId,
+      sendRoute,
+      // Check the relay, mandatory controls, and protected-room provisioning.
+      assertActive: () => enforcementHealth.isActive(policyId),
+    },
+  })
+);
+
+registerRoute(
+  'post',
+  sendRoute,
+  createMatrixEnforcedSendHandler({
+    resolveWebId: readVerifiedWebId,
+    resolveActor: (webId) => verifiedMatrixActorFor(webId),
+    // This must also verify that room power levels still lock direct member sends.
+    authorize: ({ callerId, roomId }) =>
+      authorizeProtectedRoom(callerId, roomId),
+    controls: [accountRestrictionControl, messageSafetyControl],
+    dispatch: (event) => relay.send(event),
+    onDenied: (event, decision, controlId) =>
+      auditDeniedEvent(event, decision, controlId),
+  })
+);
+
+const powerLevels = createModeratedRoomPowerLevels({
+  relayUserId: '@relay:chat.example.org',
+  memberUserIds: ['@alice:chat.example.org', '@bob:chat.example.org'],
+});
+```
+
+```tsx
+useMatrixTransport({
+  getViewer,
+  namespace,
+  sessionHeaders,
+  requireEnforcement: { policyId: 'community-safety-v1' },
+});
+```
+
+The enforced route rejects all body identity fields and stamps its own trusted
+logical actor. A silent denial returns the same `{ event_id }` response shape as
+a dispatched event and never calls the relay. A missing or throwing control is
+an explicit failure, never an unscanned send.
+
+The room power levels are essential. Using only the route or only
+`requireEnforcement` is not non-bypassable. Hosts must also keep the relay token
+server-side and prevent provisioning of unprotected rooms in a moderated
+namespace.
+
+For true device-to-device E2EE, the homeserver and relay see only ciphertext and
+cannot enforce plaintext content policy. Metadata controls, account freezes,
+blocking, rate limits, and user reports still work. A plaintext scanner can be
+mandatory only when the moderated room is server-readable or the scanner/relay
+is an explicitly disclosed encryption endpoint.
 
 ## Homeserver
 

@@ -12,6 +12,7 @@ import {
   type MatrixBridgeConfig,
   type MatrixIdentity,
 } from './identity.js';
+import type { MatrixEnforcementSession } from '../enforcement.js';
 
 /** Enough of an incoming request for the session route. Only `body` is read. */
 export interface MatrixSessionRequest {
@@ -29,17 +30,17 @@ export interface MatrixSessionResponse {
 
 export type MatrixSessionHandler = (
   req: MatrixSessionRequest,
-  res: MatrixSessionResponse,
+  res: MatrixSessionResponse
 ) => Promise<unknown>;
 
 /** Read the WebID from the host's verified server session. */
 export type WebIdFromRequest = (
-  req: MatrixSessionRequest,
+  req: MatrixSessionRequest
 ) => Promise<string | null | undefined> | string | null | undefined;
 
 /** Optional display name from the host session. Cosmetic; never identity. */
 export type DisplayNameFromRequest = (
-  req: MatrixSessionRequest,
+  req: MatrixSessionRequest
 ) => Promise<string | null | undefined> | string | null | undefined;
 
 /**
@@ -49,7 +50,7 @@ export type DisplayNameFromRequest = (
  */
 export type EnsureMatrixSessionFn = (
   webId: string,
-  displayName?: string,
+  displayName?: string
 ) => Promise<MatrixIdentity>;
 
 export interface MatrixSessionHandlerOptions {
@@ -76,6 +77,16 @@ export interface MatrixSessionHandlerOptions {
   webIdAccountDataType?: string;
   registrationPath?: string;
   recordIdentity?: MatrixBridgeConfig['recordIdentity'];
+  /**
+   * Mandatory relay enforcement. The session is refused unless `assertActive`
+   * confirms that the relay route and room-locking infrastructure are healthy.
+   */
+  enforcement?: MatrixEnforcementSession & {
+    assertActive(input: {
+      webId: string;
+      req: MatrixSessionRequest;
+    }): boolean | Promise<boolean>;
+  };
 }
 
 /** Express-style app with a `post` mount. */
@@ -89,15 +100,24 @@ const MISSING_RESOLVER =
 const MISSING_BRIDGE =
   'createMatrixSessionHandler requires ensureSession or a MatrixBridgeConfig with serverName.';
 
-function bridgeConfigOf(options: MatrixSessionHandlerOptions): MatrixBridgeConfig | undefined {
-  if (typeof options.config?.serverName === 'string' && options.config.serverName.length > 0) {
+function bridgeConfigOf(
+  options: MatrixSessionHandlerOptions
+): MatrixBridgeConfig | undefined {
+  if (
+    typeof options.config?.serverName === 'string' &&
+    options.config.serverName.length > 0
+  ) {
     return options.config;
   }
-  if (typeof options.serverName !== 'string' || options.serverName.length === 0) return undefined;
+  if (typeof options.serverName !== 'string' || options.serverName.length === 0)
+    return undefined;
   const config: MatrixBridgeConfig = { serverName: options.serverName };
-  if (options.webIdAccountDataType !== undefined) config.webIdAccountDataType = options.webIdAccountDataType;
-  if (options.registrationPath !== undefined) config.registrationPath = options.registrationPath;
-  if (options.recordIdentity !== undefined) config.recordIdentity = options.recordIdentity;
+  if (options.webIdAccountDataType !== undefined)
+    config.webIdAccountDataType = options.webIdAccountDataType;
+  if (options.registrationPath !== undefined)
+    config.registrationPath = options.registrationPath;
+  if (options.recordIdentity !== undefined)
+    config.recordIdentity = options.recordIdentity;
   return config;
 }
 
@@ -112,7 +132,11 @@ function parsedBody(body: unknown): unknown {
 
 /** True when the parsed body has an own `webId` key, whatever its value. */
 function bodyHasWebId(body: unknown): boolean {
-  return !!body && typeof body === 'object' && Object.prototype.hasOwnProperty.call(body, 'webId');
+  return (
+    !!body &&
+    typeof body === 'object' &&
+    Object.prototype.hasOwnProperty.call(body, 'webId')
+  );
 }
 
 function bodyName(body: unknown): string | undefined {
@@ -128,7 +152,7 @@ function errorMessage(error: unknown): string {
 async function displayNameFor(
   req: MatrixSessionRequest,
   options: MatrixSessionHandlerOptions,
-  body: unknown,
+  body: unknown
 ): Promise<string | undefined> {
   if (typeof options.resolveDisplayName === 'function') {
     const resolved = await options.resolveDisplayName(req);
@@ -143,17 +167,34 @@ async function displayNameFor(
  * who is signed in, and the handler refuses to exist.
  */
 export function createMatrixSessionHandler(
-  options: MatrixSessionHandlerOptions,
+  options: MatrixSessionHandlerOptions
 ): MatrixSessionHandler {
   if (!options || typeof options.resolveWebId !== 'function') {
     throw new Error(MISSING_RESOLVER);
   }
-  const injected = typeof options.ensureSession === 'function' ? options.ensureSession : undefined;
+  const injected =
+    typeof options.ensureSession === 'function'
+      ? options.ensureSession
+      : undefined;
   const config = injected ? undefined : bridgeConfigOf(options);
   if (!injected && !config) throw new Error(MISSING_BRIDGE);
+  if (options.enforcement) {
+    const enforcement = options.enforcement;
+    if (
+      enforcement.mode !== 'relay' ||
+      !enforcement.policyId?.trim() ||
+      !enforcement.sendRoute?.trim() ||
+      typeof enforcement.assertActive !== 'function'
+    ) {
+      throw new Error(
+        'Matrix enforcement requires mode relay, policyId, sendRoute, and assertActive'
+      );
+    }
+  }
   const ensure: EnsureMatrixSessionFn =
     injected ??
-    ((webId, displayName) => ensureMatrixSession(webId, config as MatrixBridgeConfig, displayName));
+    ((webId, displayName) =>
+      ensureMatrixSession(webId, config as MatrixBridgeConfig, displayName));
 
   return async (req, res) => {
     try {
@@ -167,9 +208,23 @@ export function createMatrixSessionHandler(
       if (typeof sessionWebId !== 'string' || sessionWebId.trim() === '') {
         return res.status(401).json({ error: 'authentication-required' });
       }
+      if (options.enforcement) {
+        const active = await options.enforcement.assertActive({
+          webId: sessionWebId,
+          req,
+        });
+        if (!active) {
+          return res
+            .status(503)
+            .json({ error: 'matrix-enforcement-unavailable' });
+        }
+      }
       const displayName = await displayNameFor(req, options, body);
       const identity = await ensure(sessionWebId, displayName);
-      return res.status(200).json(identity);
+      if (!options.enforcement) return res.status(200).json(identity);
+      const { assertActive: _assertActive, ...enforcement } =
+        options.enforcement;
+      return res.status(200).json({ ...identity, enforcement });
     } catch (error) {
       // Do not log. Bridge failures can sit next to access tokens; the
       // response carries the message and nothing is written to the console.
@@ -185,7 +240,7 @@ export function createMatrixSessionHandler(
  */
 export function registerMatrixRoutes(
   server: MatrixRouteServer,
-  options: MatrixSessionHandlerOptions & { sessionPath?: string },
+  options: MatrixSessionHandlerOptions & { sessionPath?: string }
 ): void {
   const { sessionPath = '/api/matrix/session', ...handlerOptions } = options;
   server.post(sessionPath, createMatrixSessionHandler(handlerOptions));

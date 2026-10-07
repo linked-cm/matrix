@@ -1,4 +1,9 @@
 // @_linked/matrix — a Matrix transport for @_linked/messaging.
+export {
+  assertMatrixEnforcement,
+  type MatrixEnforcementRequirement,
+  type MatrixEnforcementSession,
+} from './enforcement.js';
 //
 // The seam lives in @_linked/messaging; this package implements it. Side-effect
 // imports register the ontology and shapes into the LINKED tree (ontology FIRST,

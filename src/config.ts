@@ -22,29 +22,42 @@ export interface MatrixNamespaceConfig {
   cardEventPrefix: string;
   /** Content field carrying an inline card payload on an ordinary message. */
   cardContentField: string;
+  /** Trusted logical author stamped by the enforced relay on visible events. */
+  actorContentField: string;
   /** Account-data type storing the subject's WebID on the Matrix account. */
   webIdAccountDataType: string;
   /** Bot/puppet MXIDs excluded from typing indicators and treated as bot authors. */
   botUserIds: readonly string[];
 }
 
-export const DEFAULT_MATRIX_NAMESPACE: Omit<MatrixNamespaceConfig, 'serverName'> = {
+export const DEFAULT_MATRIX_NAMESPACE: Omit<
+  MatrixNamespaceConfig,
+  'serverName'
+> = {
   roomMarkerType: 'cm.linked.room',
   cardEventPrefix: 'cm.linked.',
   cardContentField: 'cm.linked.card',
+  actorContentField: 'cm.linked.actor',
   webIdAccountDataType: 'cm.linked.webid',
   botUserIds: [],
 };
 
 /** Fill a partial host config with the package defaults. */
 export function resolveMatrixNamespace(
-  config: Partial<MatrixNamespaceConfig> & Pick<MatrixNamespaceConfig, 'serverName'>,
+  config: Partial<MatrixNamespaceConfig> &
+    Pick<MatrixNamespaceConfig, 'serverName'>
 ): MatrixNamespaceConfig {
   return { ...DEFAULT_MATRIX_NAMESPACE, ...config };
 }
 
 /** The three poll event types derived from a host's card prefix. */
-export function pollTypesFor(config: Pick<MatrixNamespaceConfig, 'cardEventPrefix'>) {
+export function pollTypesFor(
+  config: Pick<MatrixNamespaceConfig, 'cardEventPrefix'>
+) {
   const poll = `${config.cardEventPrefix}poll`;
-  return { poll, response: `${poll}.response`, close: `${poll}.close` } as const;
+  return {
+    poll,
+    response: `${poll}.response`,
+    close: `${poll}.close`,
+  } as const;
 }
