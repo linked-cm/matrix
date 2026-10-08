@@ -1,5 +1,11 @@
 # @linked.cm/matrix
 
+## 0.3.1
+
+### Patch Changes
+
+- [#8](https://github.com/linked-cm/matrix/pull/8) [`dbd3b6d`](https://github.com/linked-cm/matrix/commit/dbd3b6de97253394850e024db6938a9100a0f493) Thanks [@flyon](https://github.com/flyon)! - Depend on `@linked.cm/messaging` ^0.3.0. Under 0.x, `^0.2.0` excluded 0.3.0, so matrix was held on the older messaging.
+
 ## 0.3.0
 
 ### Minor Changes
