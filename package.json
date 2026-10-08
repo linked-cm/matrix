@@ -80,7 +80,7 @@
   "dependencies": {
     "@_linked/core": "^2.25.0",
     "@_linked/xsd": "^1.0.0",
-    "@linked.cm/messaging": "^0.2.0"
+    "@linked.cm/messaging": "^0.3.0"
   },
   "peerDependencies": {
     "matrix-js-sdk": ">=42.0.0",
