@@ -112,5 +112,6 @@
     "chat",
     "e2ee",
     "rdf"
-  ]
+  ],
+  "packageManager": "npm@12.2.0"
 }
