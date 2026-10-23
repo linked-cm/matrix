@@ -267,7 +267,7 @@ identity spine, never a database.
 
 An app that built Matrix before this package existed minted its own predicates.
 Those triples are correct data in a private vocabulary. `scripts/migrate-namespace.mjs`
-moves them onto `https://id.linked.cm/matrix/`, one term per transaction:
+moves them onto `https://linked.cm/ont/matrix/`, one term per transaction:
 
 ```sh
 node scripts/migrate-namespace.mjs \
@@ -280,8 +280,13 @@ Read the counts, then re-run without `--dry-run`. Every term is idempotent, and
 old triples are removed only after the new ones are written. Nothing runs this
 for you.
 
-The package targets `@_linked/core` ^2.25.0 and owns the permanent identifier
-namespace `https://id.linked.cm/matrix/`.
+Data this package wrote before 1.0 speaks `https://id.linked.cm/matrix/`; the same script
+moves it with `--from https://id.linked.cm/matrix/` (the terms keep their names).
+
+The package targets `@_linked/core` ^2.37.2 and owns the ontology namespace
+`https://linked.cm/ont/matrix/` (prefix `matrix`), declared in `src/data/matrix.ttl` and
+registered from `src/ontologies/matrix.register.ts`. The pre-1.0 namespace is still exported
+as the deprecated `legacyNs`.
 
 During development this package depends on `@linked.cm/messaging` as
 `file:../messaging`. Replace that with `^0.2.0` after messaging 0.2.0 is
