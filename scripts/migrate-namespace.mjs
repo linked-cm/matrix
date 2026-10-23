@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Rewrite an existing host-owned Matrix vocabulary onto the portable
- * `https://id.linked.cm/matrix/` terms this package defines.
+ * `https://linked.cm/ont/matrix/` terms this package defines.
  *
  * An app that ran Matrix before extracting this package minted its own
  * predicates (Serve, for instance, used
@@ -19,11 +19,17 @@
  *
  * Old triples are removed only after the new ones are written, and every term is
  * idempotent: re-running finds nothing left to move.
+ *
+ * Data written by this package before 1.0 speaks `https://id.linked.cm/matrix/`. Pass that as
+ * --from and every term moves under its own name.
  */
-const TARGET = 'https://id.linked.cm/matrix/';
+const TARGET = 'https://linked.cm/ont/matrix/';
 
-/** old local name → new local name. Classes first, then properties. */
-const TERMS = [
+/** The namespace this package used before 1.0: same local names as TARGET. */
+const LEGACY = 'https://id.linked.cm/matrix/';
+
+/** old local name → new local name for a host vocabulary (Serve's). Classes first, then properties. */
+const HOST_TERMS = [
   ['MatrixIdentity', 'MatrixIdentity'],
   ['MatrixRoomBinding', 'MatrixRoomBinding'],
   ['forPlayer', 'forSubject'],
@@ -46,6 +52,11 @@ function arg(name, fallback) {
 const endpoint = arg('endpoint');
 const from = arg('from');
 const dryRun = process.argv.includes('--dry-run');
+
+const TERMS =
+  from === LEGACY
+    ? HOST_TERMS.map(([, name]) => [name, name])
+    : HOST_TERMS;
 
 if (!endpoint || !from) {
   console.error('Usage: migrate-namespace.mjs --endpoint <sparql-url> --from <old-namespace-iri> [--dry-run]');
