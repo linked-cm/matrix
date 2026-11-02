@@ -14,6 +14,11 @@ accessor modules.
   `ontologies/matrix.data` (`ns`, `dataFiles`, `loadData`, `_ontologyResource`) and
   `ontologies/matrix.register`. Import the terms as a namespace:
   `import * as matrix from '@linked.cm/matrix/ontologies/matrix'`.
+- **Property groups are terms.** The shapes' `sh:group` values were bare strings (`'identity'`,
+  `'binding'`, `'policy'`), which the shapes Turtle wrote as relative IRIs and shape sync refused.
+  They are now `sh:PropertyGroup` terms of the ontology (`matrix:identityGroup`,
+  `matrix:bindingGroup`, `matrix:policyGroup`, each with a label, comment and `sh:order`),
+  exported from `ontologies/matrix`.
 - **Removed:** the root's `mx` namespace object (import `ontologies/matrix` instead), `_self`
   (now `_ontologyResource` in `ontologies/matrix.data`), `legacyNs`, `ns`/`dataFiles`/`loadData`
   from `ontologies/matrix` (now in `ontologies/matrix.data`), and

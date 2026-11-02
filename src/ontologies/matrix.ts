@@ -11,6 +11,9 @@ export const MatrixRoomBinding = /*#__PURE__*/ ns('MatrixRoomBinding');
 /** Host audience key — enforced as room membership by the appservice. */
 export const audience = /*#__PURE__*/ ns('audience');
 
+/** Form section for what a room binding links: the host entity, the Matrix room and its channel key. */
+export const bindingGroup = /*#__PURE__*/ ns('bindingGroup');
+
 /** The host entity (team/mission/event/conversation IRI) this room realizes. */
 export const boundEntity = /*#__PURE__*/ ns('boundEntity');
 
@@ -23,8 +26,14 @@ export const encrypted = /*#__PURE__*/ ns('encrypted');
 /** The subject (a Person/Agent IRI) this Matrix identity belongs to. */
 export const forSubject = /*#__PURE__*/ ns('forSubject');
 
+/** Form section for a Matrix identity: the subject and its derived MXID. */
+export const identityGroup = /*#__PURE__*/ ns('identityGroup');
+
 /** Derived opaque Matrix user id, e.g. '@p_…:chat.example.org'. */
 export const mxid = /*#__PURE__*/ ns('mxid');
+
+/** Form section for the policy a room binding enforces: its privacy tier, audience and encryption. */
+export const policyGroup = /*#__PURE__*/ ns('policyGroup');
 
 /** Opaque Matrix room id, e.g. '!abc:chat.example.org'. */
 export const roomId = /*#__PURE__*/ ns('roomId');

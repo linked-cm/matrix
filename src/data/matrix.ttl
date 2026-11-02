@@ -1,6 +1,8 @@
 @prefix matrix: <https://linked.cm/ont/matrix/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
 matrix:
@@ -47,3 +49,21 @@ matrix:roomId
 matrix:tier
     a owl:DatatypeProperty ;
     rdfs:comment "'public' | 'team' | 'personal' — the privacy tier the room realizes."@en .
+
+matrix:bindingGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for what a room binding links: the host entity, the Matrix room and its channel key."@en ;
+    rdfs:label "Binding"@en ;
+    sh:order "1"^^xsd:decimal .
+
+matrix:identityGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for a Matrix identity: the subject and its derived MXID."@en ;
+    rdfs:label "Identity"@en ;
+    sh:order "1"^^xsd:decimal .
+
+matrix:policyGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for the policy a room binding enforces: its privacy tier, audience and encryption."@en ;
+    rdfs:label "Policy"@en ;
+    sh:order "2"^^xsd:decimal .

@@ -20,7 +20,7 @@ export class MatrixIdentityShape extends Shape {
     required: true,
     maxCount: 1,
     order: 1,
-    group: 'identity',
+    group: mx.identityGroup,
     name: 'Subject',
     description: 'The subject this Matrix identity belongs to.',
   })
@@ -33,7 +33,7 @@ export class MatrixIdentityShape extends Shape {
     required: true,
     maxCount: 1,
     order: 2,
-    group: 'identity',
+    group: mx.identityGroup,
     name: 'MXID',
     description: 'Derived opaque Matrix user id (@p_…:<server name>).',
   })
