@@ -1,5 +1,33 @@
 # @linked.cm/matrix
 
+## 1.0.0
+
+### Major Changes
+
+- [#11](https://github.com/linked-cm/matrix/pull/11) [`f678b40`](https://github.com/linked-cm/matrix/commit/f678b407fe77d21aea104d389da0aa2d25d75bc3) Thanks [@flyon](https://github.com/flyon)! - The ontology moves to `https://linked.cm/ont/matrix/` and ships as Turtle with generated
+  accessor modules.
+  
+  - **New namespace.** Terms move from `https://id.linked.cm/matrix/` to
+    `https://linked.cm/ont/matrix/` (prefix `matrix`); every term keeps its local name. Stored
+    identities and room bindings are invisible to this release until the app rewrites that
+    namespace (predicates and `rdf:type` objects) to the new one.
+  - **Generated accessor modules.** `src/data/matrix.ttl` is the only source of terms;
+    `linked generate-ontology` writes `ontologies/matrix` (one named export per term),
+    `ontologies/matrix.data` (`ns`, `dataFiles`, `loadData`, `_ontologyResource`) and
+    `ontologies/matrix.register`. Import the terms as a namespace:
+    `import * as matrix from '@linked.cm/matrix/ontologies/matrix'`.
+  - **Property groups are terms.** The shapes' `sh:group` values were bare strings (`'identity'`,
+    `'binding'`, `'policy'`), which the shapes Turtle wrote as relative IRIs and shape sync refused.
+    They are now `sh:PropertyGroup` terms of the ontology (`matrix:identityGroup`,
+    `matrix:bindingGroup`, `matrix:policyGroup`, each with a label, comment and `sh:order`),
+    exported from `ontologies/matrix`.
+  - **Removed:** the root's `mx` namespace object (import `ontologies/matrix` instead), `_self`
+    (now `_ontologyResource` in `ontologies/matrix.data`), `legacyNs`, `ns`/`dataFiles`/`loadData`
+    from `ontologies/matrix` (now in `ontologies/matrix.data`), and
+    `scripts/migrate-namespace.mjs` (the package no longer ships `scripts/`).
+  - The build ships `lib/esm/data/matrix.ttl` and `shapes.ttl`.
+  - Requires `@_linked/core` ^2.46.0 and `@_linked/xsd` ^1.4.4; built with `@_linked/cli` ^1.61.0.
+
 ## 0.3.1
 
 ### Patch Changes
