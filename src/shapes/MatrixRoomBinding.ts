@@ -1,6 +1,6 @@
 import { Shape } from '@_linked/core/shapes/Shape';
 import { literalProperty, objectProperty } from '@_linked/core/shapes/SHACL';
-import { xsd } from '@_linked/xsd/ontologies/xsd';
+import * as xsd from '@_linked/xsd/ontologies/xsd';
 import * as mx from '../ontologies/matrix.js';
 import { linkedShape } from '../package.js';
 
@@ -22,7 +22,7 @@ export class MatrixRoomBindingShape extends Shape {
     required: true,
     maxCount: 1,
     order: 1,
-    group: 'binding',
+    group: mx.bindingGroup,
     name: 'Bound entity',
     description: 'The host entity this room realizes.',
   })
@@ -35,7 +35,7 @@ export class MatrixRoomBindingShape extends Shape {
     required: true,
     maxCount: 1,
     order: 2,
-    group: 'binding',
+    group: mx.bindingGroup,
     name: 'Matrix room id',
     description: 'Opaque Matrix room id, e.g. !abc:chat.example.org.',
   })
@@ -47,7 +47,7 @@ export class MatrixRoomBindingShape extends Shape {
     path: mx.channelKey,
     maxCount: 1,
     order: 3,
-    group: 'binding',
+    group: mx.bindingGroup,
     name: 'Channel key',
     description: 'Host taxonomy key for this channel within its space.',
   })
@@ -60,7 +60,7 @@ export class MatrixRoomBindingShape extends Shape {
     required: true,
     maxCount: 1,
     order: 4,
-    group: 'policy',
+    group: mx.policyGroup,
     name: 'Tier',
     description: 'public | team | personal — the privacy tier this room realizes.',
   })
@@ -72,7 +72,7 @@ export class MatrixRoomBindingShape extends Shape {
     path: mx.audience,
     maxCount: 1,
     order: 5,
-    group: 'policy',
+    group: mx.policyGroup,
     name: 'Audience',
     description: 'Host audience key — enforced as room membership by the appservice.',
   })
@@ -85,7 +85,7 @@ export class MatrixRoomBindingShape extends Shape {
     maxCount: 1,
     datatype: xsd.boolean,
     order: 6,
-    group: 'policy',
+    group: mx.policyGroup,
     name: 'Encrypted',
     description: 'True when the room carries m.room.encryption.',
   })

@@ -1,0 +1,69 @@
+@prefix matrix: <https://linked.cm/ont/matrix/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+matrix:
+    a owl:Ontology ;
+    dcterms:description "How a LINKED application's graph mirrors Matrix state: a subject's Matrix identity and the binding between a host entity and its Matrix room."@en ;
+    dcterms:title "Linked Matrix bridge"@en .
+
+matrix:MatrixIdentity
+    a owl:Class ;
+    rdfs:comment "Mirror of a subject's derived Matrix identity."@en .
+
+matrix:MatrixRoomBinding
+    a owl:Class ;
+    rdfs:comment "Binding between a host entity and the Matrix room that realizes its conversation."@en .
+
+matrix:audience
+    a owl:DatatypeProperty ;
+    rdfs:comment "Host audience key — enforced as room membership by the appservice."@en .
+
+matrix:boundEntity
+    a owl:ObjectProperty ;
+    rdfs:comment "The host entity (team/mission/event/conversation IRI) this room realizes."@en .
+
+matrix:channelKey
+    a owl:DatatypeProperty ;
+    rdfs:comment "Host taxonomy key for the channel within its space."@en .
+
+matrix:encrypted
+    a owl:DatatypeProperty ;
+    rdfs:comment "True when the room carries m.room.encryption."@en .
+
+matrix:forSubject
+    a owl:ObjectProperty ;
+    rdfs:comment "The subject (a Person/Agent IRI) this Matrix identity belongs to."@en .
+
+matrix:mxid
+    a owl:DatatypeProperty ;
+    rdfs:comment "Derived opaque Matrix user id, e.g. '@p_…:chat.example.org'. Never PII."@en .
+
+matrix:roomId
+    a owl:DatatypeProperty ;
+    rdfs:comment "Opaque Matrix room id, e.g. '!abc:chat.example.org'."@en .
+
+matrix:tier
+    a owl:DatatypeProperty ;
+    rdfs:comment "'public' | 'team' | 'personal' — the privacy tier the room realizes."@en .
+
+matrix:bindingGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for what a room binding links: the host entity, the Matrix room and its channel key."@en ;
+    rdfs:label "Binding"@en ;
+    sh:order "1"^^xsd:decimal .
+
+matrix:identityGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for a Matrix identity: the subject and its derived MXID."@en ;
+    rdfs:label "Identity"@en ;
+    sh:order "1"^^xsd:decimal .
+
+matrix:policyGroup
+    a sh:PropertyGroup ;
+    rdfs:comment "Form section for the policy a room binding enforces: its privacy tier, audience and encryption."@en ;
+    rdfs:label "Policy"@en ;
+    sh:order "2"^^xsd:decimal .

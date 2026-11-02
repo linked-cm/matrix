@@ -2,7 +2,14 @@
   "name": "@linked.cm/matrix",
   "version": "0.3.1",
   "description": "Matrix transport for @linked.cm/messaging — WebID↔MXID identity bridge, appservice-mediated sessions, graph-mirrored room bindings, and a matrix-js-sdk client behind the portable Messaging seam.",
-  "linkedPackage": true,
+  "linked": {
+    "kind": "library"
+  },
+  "linkedOntologies": {
+    "matrix": {
+      "namespace": "https://linked.cm/ont/matrix/"
+    }
+  },
   "type": "module",
   "main": "lib/esm/index.js",
   "module": "lib/esm/index.js",
@@ -19,7 +26,6 @@
   "files": [
     "lib",
     "infra",
-    "scripts",
     "README.md",
     "LICENSE"
   ],
@@ -28,8 +34,12 @@
     "./src/index.ts",
     "./src/shapes/index.ts",
     "./src/shapes/*.ts",
+    "./src/ontologies/*.data.ts",
+    "./src/ontologies/*.register.ts",
     "lib/esm/shapes/index.js",
-    "lib/esm/shapes/*.js"
+    "lib/esm/shapes/*.js",
+    "lib/esm/ontologies/*.data.js",
+    "lib/esm/ontologies/*.register.js"
   ],
   "publishConfig": {
     "access": "public"
@@ -78,8 +88,8 @@
     }
   },
   "dependencies": {
-    "@_linked/core": "^2.25.0",
-    "@_linked/xsd": "^1.0.0",
+    "@_linked/core": "^2.46.0",
+    "@_linked/xsd": "^1.4.4",
     "@linked.cm/messaging": "^0.3.0"
   },
   "peerDependencies": {
@@ -95,15 +105,16 @@
     }
   },
   "devDependencies": {
-    "@_linked/cli": "1.39.0",
+    "@_linked/cli": "^1.61.0",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.0",
     "@types/node": "^20.12.7",
     "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "matrix-js-sdk": "42.0.0",
     "react": "^19.3.0",
     "typescript": "^5.9.2",
-    "vitest": "^2.1.9",
-    "@changesets/changelog-github": "^1.0.0",
-    "@changesets/cli": "^3.0.0"
+    "vitest": "^2.1.9"
   },
   "keywords": [
     "linked",

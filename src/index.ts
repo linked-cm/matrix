@@ -9,11 +9,10 @@ export {
 // imports register the ontology and shapes into the LINKED tree (ontology FIRST,
 // then shapes), matching every other LINKED package.
 import './package.js';
-import './ontologies/matrix.js';
+import './ontologies/matrix.register.js';
 import './shapes/index.js';
 
 export * from './package.js';
-export * as mx from './ontologies/matrix.js';
 export { MatrixIdentityShape } from './shapes/MatrixIdentity.js';
 export { MatrixRoomBindingShape } from './shapes/MatrixRoomBinding.js';
 

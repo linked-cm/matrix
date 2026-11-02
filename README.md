@@ -263,26 +263,20 @@ template, and the bootstrap scripts. Continuwuity is a Rust homeserver with
 embedded RocksDB; it runs as a sibling container to the app and shares only the
 identity spine, never a database.
 
-## Migrating an app that already ran Matrix
+## Ontology
 
-An app that built Matrix before this package existed minted its own predicates.
-Those triples are correct data in a private vocabulary. `scripts/migrate-namespace.mjs`
-moves them onto `https://id.linked.cm/matrix/`, one term per transaction:
+The package owns the ontology namespace `https://linked.cm/ont/matrix/` (prefix `matrix`),
+declared in `src/data/matrix.ttl`, the only source of terms. `linked generate-ontology` writes the
+accessor modules from it (`package.json` `"linkedOntologies"`), and `linked build` fails when they
+are stale. Import the terms as a namespace:
 
-```sh
-node scripts/migrate-namespace.mjs \
-  --endpoint http://localhost:3030/<dataset> \
-  --from https://your.app/ont/your-app/ \
-  --dry-run
+```ts
+import * as matrix from '@linked.cm/matrix/ontologies/matrix';
+import { ns, loadData } from '@linked.cm/matrix/ontologies/matrix.data';
+
+matrix.roomId; // {id: 'https://linked.cm/ont/matrix/roomId'}
 ```
 
-Read the counts, then re-run without `--dry-run`. Every term is idempotent, and
-old triples are removed only after the new ones are written. Nothing runs this
-for you.
-
-The package targets `@_linked/core` ^2.25.0 and owns the permanent identifier
-namespace `https://id.linked.cm/matrix/`.
-
-During development this package depends on `@linked.cm/messaging` as
-`file:../messaging`. Replace that with `^0.2.0` after messaging 0.2.0 is
-published; a `file:` dependency cannot be published.
+Data stored under any other namespace (an app's own Matrix predicates, or this package's
+`https://id.linked.cm/matrix/` before 1.0) is invisible until the app rewrites it to this one;
+every term keeps its local name.
