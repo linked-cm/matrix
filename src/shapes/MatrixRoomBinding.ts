@@ -1,6 +1,6 @@
 import { Shape } from '@_linked/core/shapes/Shape';
 import { literalProperty, objectProperty } from '@_linked/core/shapes/SHACL';
-import { xsd } from '@_linked/xsd/ontologies/xsd';
+import * as xsd from '@_linked/xsd/ontologies/xsd';
 import * as mx from '../ontologies/matrix.js';
 import { linkedShape } from '../package.js';
 

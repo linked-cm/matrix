@@ -13,7 +13,6 @@ import './ontologies/matrix.register.js';
 import './shapes/index.js';
 
 export * from './package.js';
-export * as mx from './ontologies/matrix.js';
 export { MatrixIdentityShape } from './shapes/MatrixIdentity.js';
 export { MatrixRoomBindingShape } from './shapes/MatrixRoomBinding.js';
 
